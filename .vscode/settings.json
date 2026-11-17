@@ -5,9 +5,7 @@
     "**/.hg": true,
     "**/.jj": true,
     "**/.DS_Store": true,
-    "**/Thumbs.db": true,
-    "Rapport": true,
-    "Présentation": true
+    "**/Thumbs.db": true
   },
-  "hide-files.files": ["Rapport", "Présentation"]
+  "hide-files.files": []
 }
