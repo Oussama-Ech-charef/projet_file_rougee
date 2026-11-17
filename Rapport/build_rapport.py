@@ -56,7 +56,6 @@ STRUCTURE = [
 # Section title aliases / directory synonyms
 SECTION_ALIASES = {
     normalize_name("Remerciements"): [normalize_name("Remerciement")],
-    normalize_name("Stack technologique"): [normalize_name("Branche technique")],
     normalize_name("Processus 2TUP"): [normalize_name("2TUP")],
     normalize_name("Méthodologie Scrum"): [normalize_name("Scrum"), normalize_name("SCRUM")],
     normalize_name("Architecture logicielle"): [normalize_name("architecture_du_system")],
