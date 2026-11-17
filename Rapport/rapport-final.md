@@ -196,69 +196,70 @@ Dans le cadre de ce projet de **Cabinet Médical / Téléconsultation**, plusieu
 
 ##### Architecture MVC
 
-Le modèle **MVC** (Modèle - Vue - Contrôleur) structure l'application en séparant clairement les responsabilités en trois couches distinctes :
+Le modèle MVC répartit une application en trois rôles :
 
-- **Modèle** : représente les données métier et les règles de gestion médicales (ex : `Consultation`, `Patient`, `Spécialité`, `Ordonnance`).
-- **Vue** : affiche les interfaces utilisateurs et recueille les actions (dossier patient, interface de consultation, formulaire d'ordonnance).
-- **Contrôleur** : réceptionne les requêtes utilisateurs, traite les flux avec les modèles médicaux et transmet les données à la vue appropriée.
+- **Modèle** : représente les données et les règles qui leur sont liées.
+- **Vue** : affiche les informations et reçoit les actions de l’utilisateur.
+- **Contrôleur** : reçoit une action, sollicite le modèle et transmet le résultat à la vue.
 
 ```mermaid
 flowchart LR
-    U[Médecin / Praticien] -->|action| V[Vue Blade / HTML]
-    V -->|requête HTTP| C[Contrôleur ConsultationController]
-    C -->|lecture ou modification| M[Modèle Consultation]
+    U[Utilisateur] -->|action| V[Vue]
+    V -->|requête| C[Contrôleur]
+    C -->|lecture ou modification| M[Modèle]
     M -->|données| C
     C -->|résultat à afficher| V
     V -->|affichage| U
 ```
 
-_Figure 1 — Échange MVC : le contrôleur coordonne la vue et le modèle lors de la gestion d'une consultation médicale._
+_Figure 1 — Échange MVC : le contrôleur coordonne la vue et le modèle lors d’une requête._
 
-Dans notre application de cabinet médical, l'architecture MVC assure la cohérence des données de santé, où la classe **Consultation** constitue le point d'ancrage central reliant le patient, le diagnostic et l'ordonnance.
+Dans le projet, MVC sert de **repère de compréhension**, mais n’est pas appliqué strictement : l’interface HTML/JavaScript est côté navigateur, tandis que le point d’entrée PHP et les classes de traitement jouent les rôles de coordination. La classe `Genre` représente les données métier.
 
 ##### Architecture 3-tiers
 
-L'architecture 3-tiers divise l'application en trois niveaux logiques bien découplés :
+Cette architecture sépare l’application en couches qui communiquent de proche en proche :
 
-- **Niveau Présentation** : interface web ergonomique (Blade, Tailwind CSS, Alpine.js) permettant au personnel soignant de piloter les consultations et dossiers patients.
-- **Niveau Logique Métier (Application)** : traitement des règles médicales (validation des prescriptions d'ordonnances, gestion des rendez-vous et téléconsultations, filtrage par spécialité).
-- **Niveau Accès aux Données** : persistance et requêtage sécurisé des données médicales dans MySQL via l'ORM Eloquent ou les DAO.
+- **Présentation** : interface HTML/JavaScript ; envoie les requêtes et affiche les réponses.
+- **Logique métier** : traite les opérations demandées par l’utilisateur.
+- **Accès aux données** : lit et écrit les données dans leur support de stockage.
 
 ```mermaid
 flowchart TB
-    U[Médecin / Patient] --> P[Présentation<br/>Blade / Tailwind / JS]
-    P -->|requête HTTP / JSON| L[Logique métier<br/>Services / Contrôleurs PHP]
-    L --> A[Accès aux données<br/>ORM Eloquent / Repository]
-    A --> D[(Base de données MySQL)]
-    D -->|données médicales| A
+    U[Utilisateur] --> P[Présentation<br/>HTML / JavaScript]
+    P -->|requête HTTP / JSON| L[Logique métier<br/>PHP]
+    L --> A[Accès aux données<br/>GestionGenre ou DAO]
+    A --> D[(Fichier JSON)]
+    D -->|données| A
     A -->|résultat| L
-    L -->|réponse / vue| P
+    L -->|réponse JSON| P
     P -->|affichage| U
 ```
 
-_Figure 2 — Les trois tiers : séparation entre l'interface utilisateur, la logique métier et la base de données médicale._
+_Figure 2 — Les trois tiers séparent l’interface, le traitement des opérations et le stockage._
 
-##### Flux de traitement d'une consultation médicale
+##### Architecture globale
 
-Le déroulement standard d'une consultation et de l'émission d'une ordonnance s'articule comme suit :
+Le projet permet de consulter et d’ajouter des genres. L’interface du navigateur communique avec une API PHP via `fetch`. Les données sont conservées dans un fichier JSON ; elles ne sont pas stockées dans une base de données relationnelle.
 
 ```mermaid
 flowchart LR
-    U[Médecin] <-->|interface web| UI[Navigateur<br/>Fiche Consultation]
-    UI -->|POST /consultations<br/>Diagnostic & Traitement| R[Routeur Laravel]
-    R --> C[ConsultationController]
-    C --> S[Service Médical / Validation]
-    S --> M[Modèles Consultation & Ordonnance]
-    M <-->|Transactions SQL| DB[(Base de données MySQL)]
-    C -->|Vue de synthèse / Ordonnance PDF| UI
+    U[Utilisateur] <-->|interface| UI[Navigateur<br/>index.html et app.js]
+    UI -->|GET / POST<br/>JSON| API[API PHP<br/>backend/api/api.php]
+    API --> T[Traitement PHP<br/>contrôleur ou service]
+    T --> A[Accès aux données<br/>GestionGenre ou GenreDAO]
+    A -->|crée des objets| G[Modèle Genre]
+    A <-->|lecture / écriture| D[(backend/data<br/>fichier JSON des genres)]
+    API -->|réponse JSON| UI
 ```
 
-_Figure 3 — Flux d'une requête de création d'une consultation et de son ordonnance._
+_Figure 3 — Architecture commune aux versions du projet ; les noms des classes varient selon la version._
 
-1. Le médecin saisit les informations de la consultation (motif, diagnostic, notes cliniques) et rédige l'ordonnance.
-2. Le routeur achemine la requête vers `ConsultationController`.
-3. Le contrôleur valide les données et fait appel aux modèles `Consultation` et `Ordonnance` pour enregistrer l'acte médical et sa prescription dans MySQL.
-4. Le système génère la vue de synthèse ainsi que l'ordonnance prête à être imprimée ou transmise au patient.
+Le parcours d’une requête est le suivant :
+
+1. `app.js` envoie une requête **GET** pour afficher les genres ou **POST** pour en ajouter un.
+2. `api.php` transmet l’opération au traitement PHP, puis à la classe qui lit ou met à jour le fichier JSON.
+3. Le résultat est renvoyé au navigateur au format JSON ; l’interface affiche la liste actualisée.
 
 ### Prototype (fonctionnalités, classes)
 
