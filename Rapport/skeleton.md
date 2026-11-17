@@ -12,8 +12,6 @@ Introduction
 
 Contexte du projet
 
-Objectif de formation (Solicode)
-________
 Cahier des charges
 
 Méthodologie de travail
