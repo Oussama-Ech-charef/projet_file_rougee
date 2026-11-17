@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const spinner  = document.getElementById('spinner');
     const btntext  = document.getElementById('btn_text');
     
-    const api  = document.getElementById('http://localhost:8000/backend/api/api.php');
+    const api  = 'http://localhost:8000/backend/api/api.php';
 
 
 
